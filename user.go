@@ -1,5 +1,5 @@
 package avito
 
-type userData struct {
+type UserData struct {
 	Id, Sum int
 }
