@@ -9,7 +9,7 @@ type Balance interface {
 	Add(userData avito.UserData) error
 	Decrease(userData avito.UserData) error
 	Transfer(firstUserData avito.UserData, secondUserData avito.UserData) error
-	GetBalance(userId int) int
+	GetBalance(userId int) (int, error)
 }
 
 type Repository struct {

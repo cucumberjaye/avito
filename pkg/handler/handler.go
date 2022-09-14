@@ -2,13 +2,18 @@ package handler
 
 import (
 	"fmt"
+	"github.com/cucumberjaye/avito/pkg/repository"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
 type Handler struct {
-	//repo repo
+	repo *repository.Repository
+}
+
+func NewHandler(repo *repository.Repository) *Handler {
+	return &Handler{repo: repo}
 }
 
 func (h *Handler) InitRoutes() *http.ServeMux {

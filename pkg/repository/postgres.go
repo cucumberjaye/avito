@@ -6,12 +6,15 @@ import (
 )
 
 const (
-	host     = "localhost"
-	port     = "5432"
-	userName = "iskander"
-	dbName   = "postgres"
-	password = ""
-	sslMode  = ""
+	host              = "localhost"
+	port              = "5432"
+	userName          = "iskander"
+	dbName            = "postgres"
+	password          = ""
+	sslMode           = ""
+	usersTable        = "users"
+	balanceTable      = "balance"
+	transactionsTable = "transactions"
 )
 
 func NewPostgresDB() (*sql.DB, error) {
