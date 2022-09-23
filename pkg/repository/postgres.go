@@ -3,15 +3,16 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/lib/pq"
 )
 
 const (
 	host              = "localhost"
-	port              = "5432"
-	userName          = "iskander"
+	port              = "5436"
+	userName          = "postgres"
 	dbName            = "postgres"
-	password          = ""
-	sslMode           = ""
+	password          = "qwerty"
+	sslMode           = "disable"
 	usersTable        = "users"
 	balanceTable      = "balance"
 	transactionsTable = "transactions"

@@ -2,13 +2,13 @@ package repository
 
 import (
 	"database/sql"
-	"github.com/cucumberjaye/avito"
+	"github.com/cucumberjaye/balanceAPI"
 )
 
 type Balance interface {
-	Add(userData avito.UserData) error
-	Decrease(userData avito.UserData) error
-	Transfer(firstUserData avito.UserData, secondUserData avito.UserData) error
+	Add(userData balanceAPI.UserData) error
+	Decrease(userData balanceAPI.UserData) error
+	Transfer(usersData balanceAPI.TwoUsers) error
 	GetBalance(userId int) (int, error)
 }
 

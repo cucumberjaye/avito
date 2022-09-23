@@ -1,4 +1,4 @@
-module github.com/cucumberjaye/avito
+module github.com/cucumberjaye/balanceAPI
 
 go 1.18
 
