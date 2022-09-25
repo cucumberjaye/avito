@@ -15,9 +15,9 @@ func NewHandler(repo *repository.Repository) *Handler {
 
 func (h *Handler) InitRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/accrual/", h.accrual)
-	mux.HandleFunc("/api/writeoff/", h.writeOff)
-	mux.HandleFunc("/api/transfer/", h.transfer)
+	mux.HandleFunc("/api/accrual", h.accrual)
+	mux.HandleFunc("/api/writeoff", h.writeOff)
+	mux.HandleFunc("/api/transfer", h.transfer)
 	mux.HandleFunc("/api/balance/", h.userBalance)
 
 	return mux
