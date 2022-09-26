@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cucumberjaye/balanceAPI"
+	"github.com/cucumberjaye/balanceAPI/pkg/apilayer"
 	"io"
 	"log"
 	"net/http"
@@ -90,18 +91,30 @@ func (h *Handler) userBalance(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "expect /api/balance/<id> in balance handler", http.StatusBadRequest)
 		return
 	}
+
 	id, err := strconv.Atoi(pathParts[2])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	var res float64
 	if r.Method == http.MethodGet {
 		sum, err := h.repo.GetBalance(id)
+		res = float64(sum)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("%s", err.Error()), http.StatusInternalServerError)
 			return
 		}
-		jsonSum, err := json.Marshal(sum)
+		query := r.URL.Query()
+		if query["currency"] != nil {
+			newSum, err := apilayer.Convert(query["currency"][0], res)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			res = newSum
+		}
+		jsonSum, err := json.Marshal(res)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("%s", err.Error()), http.StatusInternalServerError)
 			return
