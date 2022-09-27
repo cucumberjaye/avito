@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"database/sql"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
 
@@ -18,9 +18,9 @@ const (
 	transactionsTable = "transactions"
 )
 
-func NewPostgresDB() (*sql.DB, error) {
+func NewPostgresDB() (*sqlx.DB, error) {
 	dbSource := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s", host, port, userName, dbName, password, sslMode)
-	db, err := sql.Open("postgres", dbSource)
+	db, err := sqlx.Open("postgres", dbSource)
 	if err != nil {
 		return nil, err
 	}

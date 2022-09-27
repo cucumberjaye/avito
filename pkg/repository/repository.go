@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"database/sql"
 	"github.com/cucumberjaye/balanceAPI"
+	"github.com/jmoiron/sqlx"
 )
 
 type Balance interface {
@@ -10,12 +10,13 @@ type Balance interface {
 	Decrease(userData balanceAPI.UserData) error
 	Transfer(usersData balanceAPI.TwoUsers) error
 	GetBalance(userId int) (int, error)
+	GetTransactions(userId int) ([]balanceAPI.Transactions, error)
 }
 
 type Repository struct {
 	Balance
 }
 
-func NewRepository(db *sql.DB) *Repository {
+func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{Balance: NewBalancePostgres(db)}
 }

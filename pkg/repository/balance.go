@@ -5,14 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cucumberjaye/balanceAPI"
+	"github.com/jmoiron/sqlx"
 	"log"
 )
 
 type BalancePostgres struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
-func NewBalancePostgres(db *sql.DB) *BalancePostgres {
+func NewBalancePostgres(db *sqlx.DB) *BalancePostgres {
 	return &BalancePostgres{db: db}
 }
 
@@ -69,7 +70,7 @@ func (b *BalancePostgres) Transfer(usersData balanceAPI.TwoUsers) error {
 		log.Printf(err.Error())
 		return err
 	}
-	decreaseUserData := divisionUsersData(usersData.DecreaseMoneyUser, usersData.Sum)
+	decreaseUserData := divisionUsersData(usersData.DecreaseMoneyUser, usersData.Sum, usersData.Comment)
 	tx, err = decreaseWithTx(decreaseUserData, tx)
 	if err != nil {
 		rErr := tx.Rollback()
@@ -80,7 +81,7 @@ func (b *BalancePostgres) Transfer(usersData balanceAPI.TwoUsers) error {
 		log.Printf(err.Error())
 		return err
 	}
-	addUserData := divisionUsersData(usersData.AddMoneyUser, usersData.Sum)
+	addUserData := divisionUsersData(usersData.AddMoneyUser, usersData.Sum, usersData.Comment)
 	tx, err = addWithTx(addUserData, tx, b.db)
 	if err != nil {
 		rErr := tx.Rollback()
@@ -118,7 +119,20 @@ func (b *BalancePostgres) GetBalance(userId int) (int, error) {
 	return balance, nil
 }
 
-func checkIdInDB(db *sql.DB, userId int) (bool, error) {
+func (b *BalancePostgres) GetTransactions(userId int) ([]balanceAPI.Transactions, error) {
+	var history []balanceAPI.Transactions
+
+	query := fmt.Sprintf("SELECT sum, comment FROM %s WHERE user_id=$1", transactionsTable)
+	err := b.db.Select(&history, query, userId)
+	if err != nil {
+		log.Printf(err.Error())
+		return nil, err
+	}
+
+	return history, nil
+}
+
+func checkIdInDB(db *sqlx.DB, userId int) (bool, error) {
 	query := fmt.Sprintf("SELECT id FROM %s WHERE id = $1", usersTable)
 	var sum int
 	row := db.QueryRow(query, userId)
@@ -129,7 +143,7 @@ func checkIdInDB(db *sql.DB, userId int) (bool, error) {
 	return true, nil
 }
 
-func createUser(db *sql.DB, userData balanceAPI.UserData) error {
+func createUser(db *sqlx.DB, userData balanceAPI.UserData) error {
 	tx, err := db.Begin()
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -157,11 +171,23 @@ func createUser(db *sql.DB, userData balanceAPI.UserData) error {
 		log.Fatalf(err.Error())
 		return err
 	}
+	createTransactionsQuery := fmt.Sprintf("INSERT INTO %s (user_id, sum, comment) VALUES ($1, $2, $3)", transactionsTable)
+	_, err = tx.Exec(createTransactionsQuery, userData.Id, userData.Sum, userData.Comment)
+	if err != nil {
+		rErr := tx.Rollback()
+		if rErr != nil {
+			log.Fatalf(rErr.Error())
+			return rErr
+		}
+		log.Fatalf(err.Error())
+		return err
+	}
+
 	return tx.Commit()
 }
 
-func divisionUsersData(user balanceAPI.User, sum int) balanceAPI.UserData {
-	return balanceAPI.UserData{User: user, Sum: sum}
+func divisionUsersData(user balanceAPI.User, sum int, comment string) balanceAPI.UserData {
+	return balanceAPI.UserData{User: user, Sum: sum, Comment: comment}
 }
 
 func decreaseWithTx(userData balanceAPI.UserData, tx *sql.Tx) (*sql.Tx, error) {
@@ -190,10 +216,17 @@ func decreaseWithTx(userData balanceAPI.UserData, tx *sql.Tx) (*sql.Tx, error) {
 		return tx, err
 	}
 
+	createTransactionsQuery := fmt.Sprintf("INSERT INTO %s (user_id, sum, comment) VALUES ($1, $2, $3)", transactionsTable)
+	_, err = tx.Exec(createTransactionsQuery, userData.Id, userData.Sum, userData.Comment)
+	if err != nil {
+		log.Fatalf(err.Error())
+		return tx, err
+	}
+
 	return tx, nil
 }
 
-func addWithTx(userData balanceAPI.UserData, tx *sql.Tx, db *sql.DB) (*sql.Tx, error) {
+func addWithTx(userData balanceAPI.UserData, tx *sql.Tx, db *sqlx.DB) (*sql.Tx, error) {
 	exists, err := checkIdInDB(db, userData.Id)
 	if err != nil {
 		return tx, err
@@ -207,6 +240,13 @@ func addWithTx(userData balanceAPI.UserData, tx *sql.Tx, db *sql.DB) (*sql.Tx, e
 	}
 	query := fmt.Sprintf("UPDATE %s SET balance=(SELECT balance FROM %s WHERE user_id=$1)+$2 WHERE user_id=$1", balanceTable, balanceTable)
 	_, err = tx.Exec(query, userData.Id, userData.Sum)
+	if err != nil {
+		log.Fatalf(err.Error())
+		return tx, err
+	}
+
+	createTransactionsQuery := fmt.Sprintf("INSERT INTO %s (user_id, sum, comment) VALUES ($1, $2, $3)", transactionsTable)
+	_, err = tx.Exec(createTransactionsQuery, userData.Id, userData.Sum, userData.Comment)
 	if err != nil {
 		log.Fatalf(err.Error())
 		return tx, err

@@ -100,11 +100,12 @@ func (h *Handler) userBalance(w http.ResponseWriter, r *http.Request) {
 	var res float64
 	if r.Method == http.MethodGet {
 		sum, err := h.repo.GetBalance(id)
-		res = float64(sum)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("%s", err.Error()), http.StatusInternalServerError)
 			return
 		}
+		res = float64(sum)
+
 		query := r.URL.Query()
 		if query["currency"] != nil {
 			newSum, err := apilayer.Convert(query["currency"][0], res)
@@ -128,6 +129,41 @@ func (h *Handler) userBalance(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, fmt.Sprintf("expect method GET at /api/balance/<id>, got %v", r.Method), http.StatusMethodNotAllowed)
 		return
+	}
+}
+
+func (h *Handler) userTransactions(w http.ResponseWriter, r *http.Request) {
+	path := strings.Trim(r.URL.Path, "/")
+	pathParts := strings.Split(path, "/")
+	if len(pathParts) < 3 {
+		http.Error(w, "expect /api/transactions/<id> in transactions handler", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(pathParts[2])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	var history []balanceAPI.Transactions
+	if r.Method == http.MethodGet {
+		history, err = h.repo.GetTransactions(id)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("%s", err.Error()), http.StatusInternalServerError)
+			return
+		}
+
+		jsonHistory, err := json.Marshal(history)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("%s", err.Error()), http.StatusInternalServerError)
+			return
+		}
+
+		_, err = w.Write(jsonHistory)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("%s", err.Error()), http.StatusInternalServerError)
+			return
+		}
 	}
 }
 

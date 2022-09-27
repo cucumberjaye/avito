@@ -19,6 +19,7 @@ func (h *Handler) InitRoutes() *http.ServeMux {
 	mux.HandleFunc("/api/writeoff", h.writeOff)
 	mux.HandleFunc("/api/transfer", h.transfer)
 	mux.HandleFunc("/api/balance/", h.userBalance)
+	mux.HandleFunc("/api/transactions/", h.userTransactions)
 
 	return mux
 }

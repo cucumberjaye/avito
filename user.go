@@ -8,17 +8,18 @@ type User struct {
 
 type UserData struct {
 	User
-	Sum int `json:"sum"`
+	Sum     int    `json:"sum"`
+	Comment string `json:"comment"`
 }
 
 type TwoUsers struct {
-	AddMoneyUser      User `json:"add_user"`
-	DecreaseMoneyUser User `json:"decrease_user"`
-	Sum               int  `json:"sum"`
+	AddMoneyUser      User   `json:"add_user"`
+	DecreaseMoneyUser User   `json:"decrease_user"`
+	Sum               int    `json:"sum"`
+	Comment           string `json:"comment"`
 }
 
 type Transactions struct {
-	Id      int    `db:"id"`
 	Sum     int    `db:"sum"`
 	Comment string `db:"comment"`
 }
