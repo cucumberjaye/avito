@@ -4,18 +4,22 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"os"
 )
 
 const (
-	host              = "localhost"
-	port              = "5432"
-	userName          = "postgres"
-	dbName            = "postgres"
-	password          = "qwerty"
-	sslMode           = "disable"
 	usersTable        = "users"
 	balanceTable      = "balance"
 	transactionsTable = "transactions"
+)
+
+var (
+	host              = os.Getenv("HOST")
+	port              = os.Getenv("PORT")
+	userName          = os.Getenv("USER")
+	dbName            = os.Getenv("DBNAME")
+	password          = os.Getenv("PASSWORD")
+	sslMode           = os.Getenv("SSLMODE")
 )
 
 func NewPostgresDB() (*sqlx.DB, error) {
