@@ -8,7 +8,7 @@ import (
 
 const (
 	host              = "localhost"
-	port              = "5436"
+	port              = "5432"
 	userName          = "postgres"
 	dbName            = "postgres"
 	password          = "qwerty"

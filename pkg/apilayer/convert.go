@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-const apikey = "token"
+const apikey = "Token"
 
 func Convert(currency string, sum float64) (float64, error) {
 	url := fmt.Sprintf("https://api.apilayer.com/exchangerates_data/convert?to=%s&from=RUB&amount=%d", currency, int(sum))

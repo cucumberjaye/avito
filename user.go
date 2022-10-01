@@ -20,6 +20,8 @@ type TwoUsers struct {
 }
 
 type Transactions struct {
+	No      int    `db:"no"`
 	Sum     int    `db:"sum"`
 	Comment string `db:"comment"`
+	Date    string `db:"transaction_date"`
 }

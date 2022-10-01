@@ -147,7 +147,12 @@ func (h *Handler) userTransactions(w http.ResponseWriter, r *http.Request) {
 	}
 	var history []balanceAPI.Transactions
 	if r.Method == http.MethodGet {
-		history, err = h.repo.GetTransactions(id)
+		query := r.URL.Query()
+		if query["sort"] != nil {
+			history, err = h.repo.GetTransactions(id, query["sort"][0])
+		} else {
+			history, err = h.repo.GetTransactions(id, "")
+		}
 		if err != nil {
 			http.Error(w, fmt.Sprintf("%s", err.Error()), http.StatusInternalServerError)
 			return

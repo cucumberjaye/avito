@@ -10,7 +10,7 @@ type Balance interface {
 	Decrease(userData balanceAPI.UserData) error
 	Transfer(usersData balanceAPI.TwoUsers) error
 	GetBalance(userId int) (int, error)
-	GetTransactions(userId int) ([]balanceAPI.Transactions, error)
+	GetTransactions(userId int, sortBy string) ([]balanceAPI.Transactions, error)
 }
 
 type Repository struct {

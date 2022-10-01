@@ -7,6 +7,8 @@ import (
 	"github.com/cucumberjaye/balanceAPI"
 	"github.com/jmoiron/sqlx"
 	"log"
+	"strings"
+	"time"
 )
 
 type BalancePostgres struct {
@@ -119,14 +121,29 @@ func (b *BalancePostgres) GetBalance(userId int) (int, error) {
 	return balance, nil
 }
 
-func (b *BalancePostgres) GetTransactions(userId int) ([]balanceAPI.Transactions, error) {
+func (b *BalancePostgres) GetTransactions(userId int, sortBy string) ([]balanceAPI.Transactions, error) {
 	var history []balanceAPI.Transactions
-
-	query := fmt.Sprintf("SELECT sum, comment FROM %s WHERE user_id=$1", transactionsTable)
+	var query string
+	if sortBy == "sum" {
+		query = fmt.Sprintf(`SELECT row_number() over(order by sum) as no, sum, comment, transaction_date 
+									FROM %s WHERE user_id=$1
+									ORDER BY no`, transactionsTable)
+	} else if sortBy == "date" {
+		query = fmt.Sprintf(`SELECT row_number() over(order by transaction_date) as no, sum, comment, transaction_date 
+									FROM %s WHERE user_id=$1
+									ORDER BY no`, transactionsTable)
+	} else {
+		query = fmt.Sprintf(`SELECT row_number() over() as no, sum, comment, transaction_date 
+									FROM %s WHERE user_id=$1
+									ORDER BY no`, transactionsTable)
+	}
 	err := b.db.Select(&history, query, userId)
 	if err != nil {
 		log.Printf(err.Error())
 		return nil, err
+	}
+	for index, _ := range history {
+		history[index].Date = strings.Split(history[index].Date, "T")[0]
 	}
 
 	return history, nil
@@ -137,7 +154,6 @@ func checkIdInDB(db *sqlx.DB, userId int) (bool, error) {
 	var sum int
 	row := db.QueryRow(query, userId)
 	if err := row.Scan(&sum); err != nil {
-		log.Printf(err.Error())
 		return false, nil
 	}
 	return true, nil
@@ -171,8 +187,8 @@ func createUser(db *sqlx.DB, userData balanceAPI.UserData) error {
 		log.Fatalf(err.Error())
 		return err
 	}
-	createTransactionsQuery := fmt.Sprintf("INSERT INTO %s (user_id, sum, comment) VALUES ($1, $2, $3)", transactionsTable)
-	_, err = tx.Exec(createTransactionsQuery, userData.Id, userData.Sum, userData.Comment)
+	createTransactionsQuery := fmt.Sprintf("INSERT INTO %s (user_id, sum, comment, transaction_date) VALUES ($1, $2, $3, $4)", transactionsTable)
+	_, err = tx.Exec(createTransactionsQuery, userData.Id, userData.Sum, userData.Comment, time.Now().Format("2006-01-02"))
 	if err != nil {
 		rErr := tx.Rollback()
 		if rErr != nil {
@@ -216,8 +232,8 @@ func decreaseWithTx(userData balanceAPI.UserData, tx *sql.Tx) (*sql.Tx, error) {
 		return tx, err
 	}
 
-	createTransactionsQuery := fmt.Sprintf("INSERT INTO %s (user_id, sum, comment) VALUES ($1, $2, $3)", transactionsTable)
-	_, err = tx.Exec(createTransactionsQuery, userData.Id, userData.Sum, userData.Comment)
+	createTransactionsQuery := fmt.Sprintf("INSERT INTO %s (user_id, sum, comment, transaction_date) VALUES ($1, $2, $3, $4)", transactionsTable)
+	_, err = tx.Exec(createTransactionsQuery, userData.Id, userData.Sum, userData.Comment, time.Now().Format("2006-01-02"))
 	if err != nil {
 		log.Fatalf(err.Error())
 		return tx, err
@@ -245,8 +261,8 @@ func addWithTx(userData balanceAPI.UserData, tx *sql.Tx, db *sqlx.DB) (*sql.Tx, 
 		return tx, err
 	}
 
-	createTransactionsQuery := fmt.Sprintf("INSERT INTO %s (user_id, sum, comment) VALUES ($1, $2, $3)", transactionsTable)
-	_, err = tx.Exec(createTransactionsQuery, userData.Id, userData.Sum, userData.Comment)
+	createTransactionsQuery := fmt.Sprintf("INSERT INTO %s (user_id, sum, comment, transaction_date) VALUES ($1, $2, $3, $4)", transactionsTable)
+	_, err = tx.Exec(createTransactionsQuery, userData.Id, userData.Sum, userData.Comment, time.Now().Format("2006-01-02"))
 	if err != nil {
 		log.Fatalf(err.Error())
 		return tx, err
