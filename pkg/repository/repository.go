@@ -5,6 +5,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+//go:generate mockgen -source=repository.go -destination=mocks/mock.go
+
 type Balance interface {
 	Add(userData balanceAPI.UserData) error
 	Decrease(userData balanceAPI.UserData) error

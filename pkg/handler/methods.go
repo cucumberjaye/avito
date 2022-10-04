@@ -38,7 +38,6 @@ func (h *Handler) accrual(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) writeOff(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/api/writeoff" {
-		fmt.Println(r.Method)
 		if r.Method == http.MethodPost {
 			userData, err := requestUnmarshal(r)
 			if err != nil {
@@ -196,18 +195,23 @@ func requestUnmarshal(r *http.Request) (balanceAPI.UserData, error) {
 }
 
 func twoUsersUnmarshal(r *http.Request) (balanceAPI.TwoUsers, error) {
-	var result *balanceAPI.TwoUsers
+	var result balanceAPI.TwoUsers
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf(err.Error())
-		return *result, err
+		return result, err
+	}
+
+	count := strings.Split(string(b), ",")
+	if len(count) != 8 {
+		return result, errors.New("invalid input body")
 	}
 
 	err = json.Unmarshal(b, &result)
 	if err != nil {
 		log.Printf(err.Error())
-		return *result, err
+		return result, err
 	}
 
-	return *result, nil
+	return result, nil
 }
