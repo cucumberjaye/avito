@@ -7,9 +7,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
-const apikey = "Token"
+var apikey = os.Getenv("TOKEN")
 
 func Convert(currency string, sum float64) (float64, error) {
 	url := fmt.Sprintf("https://api.apilayer.com/exchangerates_data/convert?to=%s&from=RUB&amount=%d", currency, int(sum))
