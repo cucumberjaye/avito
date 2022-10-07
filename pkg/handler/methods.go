@@ -191,6 +191,10 @@ func requestUnmarshal(r *http.Request) (balanceAPI.UserData, error) {
 		return result, err
 	}
 
+	if result.Sum <= 0 {
+		return result, errors.New("invalid input body")
+	}
+
 	return result, nil
 }
 
@@ -211,6 +215,10 @@ func twoUsersUnmarshal(r *http.Request) (balanceAPI.TwoUsers, error) {
 	if err != nil {
 		log.Printf(err.Error())
 		return result, err
+	}
+
+	if result.Sum <= 0 {
+		return result, errors.New("invalid input body")
 	}
 
 	return result, nil
